@@ -1,9 +1,15 @@
 import { useCallback, useState, useEffect } from "react";
-import { View, StyleSheet, Text } from "react-native";
+import { View, StyleSheet, Alert } from "react-native";
 import { BarCodeScanner } from 'expo-barcode-scanner';
+
+interface IOnBarcodeScanner {
+  type: string;
+  data: string;
+}
 
 const QRCodeScreen = () => {
   const [permission, setPermission] = useState(false);
+  const [scanned, setScanned] = useState(false);
 
   const getBarCodeScannerPermissions = useCallback(async () => {
     try {
@@ -14,6 +20,16 @@ const QRCodeScreen = () => {
       setPermission(false);
     }
   }, [])
+
+  const handleBarCodeScanned = useCallback(({ type, data }: IOnBarcodeScanner) => {
+    setScanned(true);
+    Alert.alert('Scanner', `${data} has been scanned!`, [
+      {
+        text: 'OK',
+        onPress: () => { setScanned(false)}
+      }
+    ]);
+  }, []);
 
   useEffect(() => {
     getBarCodeScannerPermissions()
@@ -26,22 +42,9 @@ const QRCodeScreen = () => {
           style={styles.boxCamera}
           type="back"
           barCodeTypes={[BarCodeScanner.Constants.BarCodeType.qr]}
-          onBarCodeScanned={({ type, data }) => {
-            try {
-              console.log(type);
-              console.log(data);
-
-              const result = JSON.parse(data);
-
-              console.log(result)
-            } catch (err) {
-              console.log('Unable to parse: ', err)
-            }
-          }}
-        >
-
-          
-        </BarCodeScanner>
+          onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
+        />
+        
       )}
     </View>
   )
